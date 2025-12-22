@@ -1,0 +1,75 @@
+[
+  {
+    "title": "Machine Learning Fundamentals: A Comprehensive Guide",
+    "authors": "Dr. Sarah Johnson, Prof. Michael Chen",
+    "publication_year": 2023,
+    "abstract": "This paper provides a comprehensive overview of machine learning fundamentals, covering supervised and unsupervised learning algorithms, neural networks, and deep learning architectures. We discuss practical applications and current research trends in the field.",
+    "full_text": "Machine learning has revolutionized the way we approach data analysis and pattern recognition. This comprehensive guide covers the fundamental concepts, algorithms, and applications of machine learning...",
+    "source_type": "textbook",
+    "url": "https://example.com/ml-fundamentals"
+  },
+  {
+    "title": "Natural Language Processing in Academic Writing: Challenges and Solutions",
+    "authors": "Dr. Emily Rodriguez, Dr. James Wilson",
+    "publication_year": 2024,
+    "abstract": "This research paper explores the application of natural language processing techniques in academic writing assistance. We present novel approaches to plagiarism detection, citation analysis, and writing quality assessment.",
+    "full_text": "Academic writing requires precision, clarity, and proper attribution of sources. Natural language processing technologies offer promising solutions for enhancing academic writing quality...",
+    "source_type": "paper",
+    "url": "https://example.com/nlp-academic-writing"
+  },
+  {
+    "title": "Database Systems: Design, Implementation, and Management",
+    "authors": "Prof. David Thompson, Dr. Lisa Anderson",
+    "publication_year": 2022,
+    "abstract": "A comprehensive textbook covering database design principles, SQL implementation, and database management systems. Includes practical examples and case studies for both relational and NoSQL databases.",
+    "full_text": "Database systems form the backbone of modern information systems. This textbook provides a thorough introduction to database concepts, design methodologies, and implementation techniques...",
+    "source_type": "textbook",
+    "url": "https://example.com/database-systems"
+  },
+  {
+    "title": "Vector Databases and Semantic Search: Modern Approaches to Information Retrieval",
+    "authors": "Dr. Robert Martinez, Prof. Jennifer Lee",
+    "publication_year": 2024,
+    "abstract": "This paper examines the evolution of information retrieval systems from traditional keyword-based search to modern vector-based semantic search. We discuss embedding techniques, similarity metrics, and practical applications in academic research.",
+    "full_text": "The shift from keyword-based to semantic search represents a fundamental change in how we retrieve and understand information. Vector databases enable similarity-based retrieval that captures semantic meaning...",
+    "source_type": "paper",
+    "url": "https://example.com/vector-databases"
+  },
+  {
+    "title": "Introduction to Computer Science: Programming and Algorithms",
+    "authors": "Prof. Mark Davis, Dr. Susan Brown",
+    "publication_year": 2023,
+    "abstract": "An introductory textbook covering fundamental programming concepts, data structures, and algorithms. Designed for undergraduate computer science students, with hands-on exercises and practical examples.",
+    "full_text": "Computer science education begins with understanding fundamental programming concepts and algorithmic thinking. This textbook provides a structured approach to learning programming...",
+    "source_type": "textbook",
+    "url": "https://example.com/intro-cs"
+  },
+  {
+    "title": "Ethical Considerations in AI-Powered Academic Tools",
+    "authors": "Dr. Patricia White, Prof. Thomas Green",
+    "publication_year": 2024,
+    "abstract": "This research paper addresses ethical concerns surrounding AI-powered tools in academic settings, including plagiarism detection systems, automated grading, and writing assistance. We propose guidelines for responsible implementation.",
+    "full_text": "As artificial intelligence becomes increasingly integrated into academic workflows, it is crucial to address ethical considerations. This paper examines privacy, bias, and fairness in AI academic tools...",
+    "source_type": "paper",
+    "url": "https://example.com/ai-ethics-academic"
+  },
+  {
+    "title": "Web Development: Modern Frameworks and Best Practices",
+    "authors": "Dr. Christopher Taylor, Prof. Amanda Harris",
+    "publication_year": 2023,
+    "abstract": "A comprehensive guide to modern web development, covering frontend frameworks, backend architectures, and full-stack development practices. Includes practical examples using React, Node.js, and cloud deployment strategies.",
+    "full_text": "Modern web development requires understanding of multiple technologies and frameworks. This guide covers the essential skills needed for contemporary web application development...",
+    "source_type": "textbook",
+    "url": "https://example.com/web-development"
+  },
+  {
+    "title": "Retrieval-Augmented Generation for Academic Research Assistance",
+    "authors": "Dr. Kevin Moore, Dr. Rachel Adams",
+    "publication_year": 2024,
+    "abstract": "This paper presents a retrieval-augmented generation (RAG) system designed specifically for academic research assistance. We demonstrate how combining vector search with large language models improves source recommendations and citation accuracy.",
+    "full_text": "Retrieval-augmented generation represents a powerful approach to enhancing language model capabilities with external knowledge. In academic contexts, RAG systems can provide accurate source recommendations...",
+    "source_type": "paper",
+    "url": "https://example.com/rag-academic"
+  }
+]
+
