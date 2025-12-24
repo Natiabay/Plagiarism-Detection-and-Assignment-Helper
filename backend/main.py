@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 import httpx
 import os
+import logging
 from datetime import timedelta
 
 from config import settings
@@ -20,6 +21,12 @@ from auth import (
 )
 from file_processor import extract_text_from_file, count_words
 from rag_service import search_similar_sources
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -446,10 +453,23 @@ async def search_sources(
     db: Session = Depends(get_db)
 ):
     """Search academic sources via RAG."""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
+        # Log the received query to verify it's different for each request
+        logger.info(f"API endpoint received query: '{query}' (top_k={top_k})")
+        
         sources = search_similar_sources(db, query, top_k=top_k)
+        
+        # Log the results
+        logger.info(f"API endpoint returning {len(sources)} sources for query: '{query}'")
+        if sources:
+            logger.info(f"Top result: {sources[0].get('title', 'N/A')[:50]}... (similarity: {sources[0].get('similarity', 0):.4f})")
+        
         return [SourceResponse(**source) for source in sources]
     except Exception as e:
+        logger.error(f"Error in search_sources endpoint: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error searching sources: {str(e)}"
