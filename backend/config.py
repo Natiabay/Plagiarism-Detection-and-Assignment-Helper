@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings  # type: ignore
 from typing import Optional
 
 
@@ -27,9 +27,9 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     
     # n8n
-    N8N_WEBHOOK_URL: str = "https://nati1221.app.n8n.cloud/webhook/plagiarism-check"
+    N8N_WEBHOOK_URL: str = "https://nati111.app.n8n.cloud/webhook/plagiarism-check"
     # Called after student reviews results and confirms sending to instructor
-    N8N_TEACHER_WEBHOOK_URL: str = "https://nati1221.app.n8n.cloud/webhook/teacher-notify"
+    N8N_TEACHER_WEBHOOK_URL: str = "https://nati111.app.n8n.cloud/webhook/teacher-notify"
     
     # Notifications
     TEACHER_EMAIL: str = "instructor@example.com"

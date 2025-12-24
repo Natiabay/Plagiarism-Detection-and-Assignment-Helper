@@ -29,7 +29,7 @@ services:
     image: dpage/pgadmin4:latest
     container_name: academic_pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@academic.local
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
@@ -93,8 +93,8 @@ services:
       - FASTAPI_HOST=${FASTAPI_HOST:-0.0.0.0}
       - FASTAPI_PORT=${FASTAPI_PORT:-8000}
       # Pin explicitly to avoid host shell env overriding .env substitutions
-      - N8N_WEBHOOK_URL=https://nati1221.app.n8n.cloud/webhook/plagiarism-check
-      - N8N_TEACHER_WEBHOOK_URL=${N8N_TEACHER_WEBHOOK_URL:-https://nati1221.app.n8n.cloud/webhook/teacher-notify}
+      - N8N_WEBHOOK_URL=https://nati111.app.n8n.cloud/webhook/plagiarism-check
+      - N8N_TEACHER_WEBHOOK_URL=${N8N_TEACHER_WEBHOOK_URL:-https://nati111.app.n8n.cloud/webhook/teacher-notify}
       - TEACHER_EMAIL=${TEACHER_EMAIL:-instructor@example.com}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-ada-002}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}

@@ -348,67 +348,7 @@ async def upload_assignment(
         )
 
 
-@app.post(f"{settings.API_V1_PREFIX}/assignments/{{assignment_id}}/send-to-teacher", response_model=MessageResponse)
-async def send_analysis_to_teacher(
-    assignment_id: int,
-    current_student: Student = Depends(get_current_student),
-    db: Session = Depends(get_db),
-):
-    """Student-confirmed step: after the student reviews results, trigger a separate n8n webhook
-    that emails the instructor. This enforces the required order: student first, teacher second."""
-    assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
-    if not assignment:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
-    if assignment.student_id != current_student.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
-
-    analysis = (
-        db.query(AnalysisResult)
-        .filter(AnalysisResult.assignment_id == assignment_id)
-        .order_by(AnalysisResult.analyzed_at.desc())
-        .first()
-    )
-    if not analysis:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Analysis not found. Please wait until processing finishes.",
-        )
-
-    payload = {
-        "assignment_id": assignment_id,
-        "student_id": str(current_student.id),
-        "student_email": current_student.email,
-        "teacher_email": settings.TEACHER_EMAIL,
-        "filename": assignment.filename,
-        "original_summary": analysis.original_summary,
-        "suggested_sources": analysis.suggested_sources,
-        "plagiarism_score": analysis.plagiarism_score,
-        "flagged_sections": analysis.flagged_sections,
-        "research_suggestions": analysis.research_suggestions,
-        "citation_recommendations": analysis.citation_recommendations,
-        "confidence_score": analysis.confidence_score,
-        "analyzed_at": analysis.analyzed_at.isoformat() if analysis.analyzed_at else None,
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(settings.N8N_TEACHER_WEBHOOK_URL, json=payload)
-            resp.raise_for_status()
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Teacher notification failed: HTTP {e.response.status_code} - {e.response.text}",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Teacher notification failed: {str(e)}",
-        )
-
-    return MessageResponse(message="Sent to teacher successfully")
-
-
-# Get analysis results by analysis ID
+# Get analysis results by analysis ID (required endpoint)
 @app.get(f"{settings.API_V1_PREFIX}/analysis/{{analysis_id}}", response_model=AnalysisResponse)
 async def get_analysis(
     analysis_id: int,
