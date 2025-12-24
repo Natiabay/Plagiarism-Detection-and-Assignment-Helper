@@ -112,7 +112,3 @@ docker-compose logs backend
 ## Author
 
 Natnael Abayneh
-
-## Repository
-
-https://github.com/Natiabay/Plagiarism-Detection-and-Assignment-Helper.git
