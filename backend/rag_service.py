@@ -12,13 +12,19 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY)
 def generate_embedding(text: str) -> List[float]:
     """Generate embedding for text using OpenAI."""
     try:
+        if not settings.OPENAI_API_KEY or settings.OPENAI_API_KEY == "":
+            raise Exception("OPENAI_API_KEY is not set. Please configure it in your .env file.")
+        
         response = client.embeddings.create(
             model=settings.EMBEDDING_MODEL,
             input=text
         )
         return response.data[0].embedding
     except Exception as e:
-        raise Exception(f"Error generating embedding: {str(e)}")
+        error_msg = str(e)
+        if "API key" in error_msg or "OPENAI_API_KEY" in error_msg:
+            raise Exception(f"OpenAI API key not configured: {error_msg}")
+        raise Exception(f"Error generating embedding: {error_msg}")
 
 
 def search_similar_sources(
@@ -29,13 +35,15 @@ def search_similar_sources(
 ) -> List[Dict]:
     """Search for similar academic sources using vector similarity."""
     try:
+        # Check if there are any sources in the database
+        source_count = db.query(AcademicSource).count()
+        if source_count == 0:
+            raise Exception("No academic sources found in database. Please load sample sources from data/sample_academic_sources.json")
+        
         # Generate embedding for query
         query_embedding = generate_embedding(query_text)
         
-        # Convert to PostgreSQL array format
-        embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
-        
-        # Query using cosine similarity
+        # Query using cosine similarity with proper vector casting
         query = text("""
             SELECT 
                 id,
@@ -45,12 +53,15 @@ def search_similar_sources(
                 abstract,
                 source_type,
                 url,
-                1 - (embedding <=> :embedding::vector) as similarity
+                1 - (embedding <=> CAST(:embedding AS vector)) as similarity
             FROM academic_sources
             WHERE embedding IS NOT NULL
-            ORDER BY embedding <=> :embedding::vector
+            ORDER BY embedding <=> CAST(:embedding AS vector)
             LIMIT :top_k
         """)
+        
+        # Convert embedding list to string format for PostgreSQL
+        embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
         
         result = db.execute(
             query,

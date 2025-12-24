@@ -92,7 +92,10 @@ services:
       - JWT_EXPIRATION_HOURS=${JWT_EXPIRATION_HOURS:-24}
       - FASTAPI_HOST=${FASTAPI_HOST:-0.0.0.0}
       - FASTAPI_PORT=${FASTAPI_PORT:-8000}
-      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://n8n:5678/webhook/plagiarism-check}
+      # Pin explicitly to avoid host shell env overriding .env substitutions
+      - N8N_WEBHOOK_URL=https://nati1221.app.n8n.cloud/webhook/plagiarism-check
+      - N8N_TEACHER_WEBHOOK_URL=${N8N_TEACHER_WEBHOOK_URL:-https://nati1221.app.n8n.cloud/webhook/teacher-notify}
+      - TEACHER_EMAIL=${TEACHER_EMAIL:-instructor@example.com}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-ada-002}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
       - DEBUG=${DEBUG:-True}

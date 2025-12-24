@@ -1,5 +1,5 @@
 {
-  "name": "Academic Assignment Plagiarism Detection with RAG and Vector Search",
+  "name": "Academic Assignment Analysis (RAG + AI)",
   "nodes": [
     {
       "parameters": {
@@ -8,291 +8,267 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "webhook-trigger",
-      "name": "Webhook Trigger",
+      "id": "30192d3a-c2a5-4442-97a8-9faab2d52d72",
+      "name": "Webhook - Plagiarism Check",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [250, 300],
-      "webhookId": "plagiarism-check"
-    },
-    {
-      "parameters": {
-        "operation": "extractFromFile",
-        "binaryPropertyName": "data",
-        "options": {}
-      },
-      "id": "extract-text",
-      "name": "Extract Text from File",
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [450, 300]
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "webhookId": "515ebe95-5053-438b-9509-69cf734a457c"
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "config-1",
-              "name": "assignmentText",
-              "value": "={{ $json.body.assignmentText || $json.data }}",
-              "type": "string"
-            },
-            {
-              "id": "config-2",
+              "id": "id-1",
               "name": "student_id",
-              "value": "={{ $json.body.student_id || $json.student_id }}",
+              "value": "={{ $json.body.student_id }}",
               "type": "string"
             },
             {
-              "id": "config-3",
+              "id": "id-2",
+              "name": "student_email",
+              "value": "={{ $json.body.student_email }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "teacher_email",
+              "value": "={{ $json.body.teacher_email }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
               "name": "assignment_id",
-              "value": "={{ $json.body.assignment_id || $json.assignment_id }}",
+              "value": "={{ $json.body.assignment_id }}",
+              "type": "number"
+            },
+            {
+              "id": "id-5",
+              "name": "filename",
+              "value": "={{ $json.body.filename }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "assignmentText",
+              "value": "={{ $json.body.assignmentText }}",
               "type": "string"
             }
           ]
         },
+        "includeOtherFields": true,
         "options": {}
       },
-      "id": "workflow-config",
-      "name": "Workflow Configuration",
+      "id": "bffd744c-cd08-44f6-988a-5d399e4fa5ca",
+      "name": "Normalize Input",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3.3,
-      "position": [650, 300]
+      "typeVersion": 3.4,
+      "position": [224, 0]
     },
     {
       "parameters": {
-        "agent": "plagiarism-detection",
-        "promptType": "define",
-        "text": "=You are an academic plagiarism detection and research assistant. Analyze the following student assignment and:\n\n1. **Extract Key Information:**\n   - Identify the main topic and theme\n   - Determine academic level (undergraduate, graduate, etc.)\n   - Extract research questions or thesis statements\n\n2. **Plagiarism Detection:**\n   - Compare the text against academic standards\n   - Identify sections that may need better citation\n   - Calculate a plagiarism risk score (0-100, where 0 is original and 100 is highly suspicious)\n   - Flag specific sections with potential issues\n\n3. **Research Suggestions:**\n   - Based on the topic, suggest relevant academic sources\n   - Recommend citation formats (APA, MLA, Chicago, etc.)\n   - Provide research questions to explore\n\n4. **Output Format:**\n   Return a structured JSON response with:\n   - original_summary: Brief summary of the assignment\n   - topic: Main topic identified\n   - academic_level: Level assessment\n   - plagiarism_score: Float between 0-100\n   - flagged_sections: Array of objects with 'text' and 'reason'\n   - research_suggestions: Text with research recommendations\n   - citation_recommendations: Recommended citation format and examples\n\n**Assignment Text:**\n{{ $json.assignmentText }}\n\n**Student ID:** {{ $json.student_id }}",
-        "options": {
-          "systemMessage": "You are an expert academic integrity analyst specializing in plagiarism detection and research guidance."
-        }
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"model\":\"text-embedding-ada-002\",\"input\":$json.assignmentText}) }}",
+        "options": {}
       },
-      "id": "plagiarism-agent",
-      "name": "Plagiarism Detection Agent",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 1.3,
-      "position": [850, 300],
+      "id": "099d29c3-4bf9-45ea-896c-a9b02fd960ce",
+      "name": "OpenAI - Generate Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [448, 0],
       "credentials": {
         "openAiApi": {
-          "id": "openai-credentials",
-          "name": "OpenAI Chat Model"
+          "id": "tOL2GKY7XjM6g7Df",
+          "name": "OpenAi account"
         }
       }
     },
     {
       "parameters": {
-        "model": "={{ $env.OPENAI_MODEL || 'gpt-4' }}",
-        "options": {
-          "temperature": 0.7
-        }
+        "mode": "runOnceForEachItem",
+        "jsCode": "const embedding = $input.item.json.data[0].embedding;\nif (!Array.isArray(embedding) || embedding.length !== 1536) {\n  throw new Error('Invalid embedding: expected array of length 1536');\n}\nconst vectorString = '[' + embedding.map(n => String(n)).join(',') + ']';\nconst normalized = $('Normalize Input').first().json;\nreturn [{\n  json: {\n    vector: vectorString,\n    assignmentText: normalized.assignmentText,\n    student_id: normalized.student_id,\n    student_email: normalized.student_email,\n    teacher_email: normalized.teacher_email,\n    assignment_id: normalized.assignment_id,\n    filename: normalized.filename\n  }\n}];"
       },
-      "id": "openai-chat-model",
-      "name": "OpenAI Chat Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1,
-      "position": [650, 150],
-      "credentials": {
-        "openAiApi": {
-          "id": "openai-credentials",
-          "name": "OpenAI Chat Model"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "query",
-        "query": "=SELECT id, title, authors, publication_year, abstract, source_type, url, 1 - (embedding <=> $1::vector) as similarity FROM academic_sources WHERE embedding IS NOT NULL ORDER BY embedding <=> $1::vector LIMIT 5",
-        "options": {
-          "queryReplacement": "={{ JSON.stringify($json.embedding) }}"
-        }
-      },
-      "id": "vector-store-retrieve",
-      "name": "Vector Store - Retrieve Sources",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.4,
-      "position": [650, 450],
-      "credentials": {
-        "postgres": {
-          "id": "postgres-vector-credentials",
-          "name": "Postgres PGVector Store"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": "={{ $env.EMBEDDING_MODEL || 'text-embedding-ada-002' }}",
-        "dimensions": 1536
-      },
-      "id": "openai-embeddings",
-      "name": "OpenAI Embeddings",
-      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
-      "typeVersion": 1,
-      "position": [450, 450],
-      "credentials": {
-        "openAiApi": {
-          "id": "openai-credentials",
-          "name": "Embeddings OpenAI"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Parse AI agent output and prepare for database storage\nconst agentOutput = $input.item.json.output || $input.item.json.text || '';\n\n// Try to parse JSON if it's a string\nlet parsedOutput;\ntry {\n  parsedOutput = typeof agentOutput === 'string' ? JSON.parse(agentOutput) : agentOutput;\n} catch (e) {\n  // If not JSON, create structured output\n  parsedOutput = {\n    original_summary: agentOutput.substring(0, 500),\n    topic: 'General',\n    academic_level: 'Undergraduate',\n    plagiarism_score: 0,\n    flagged_sections: [],\n    research_suggestions: agentOutput,\n    citation_recommendations: 'APA format recommended'\n  };\n}\n\n// Get sources from vector store if available\nconst sources = $('Vector Store - Retrieve Sources').all() || [];\nconst suggestedSources = sources.map(item => ({\n  title: item.json.title,\n  authors: item.json.authors,\n  publication_year: item.json.publication_year,\n  abstract: item.json.abstract,\n  source_type: item.json.source_type,\n  url: item.json.url,\n  relevance: `Relevance score: ${(item.json.similarity * 100).toFixed(1)}%`\n}));\n\n// Prepare final data structure\nreturn {\n  json: {\n    assignment_id: $('Workflow Configuration').item.json.assignment_id,\n    student_id: $('Workflow Configuration').item.json.student_id,\n    original_summary: parsedOutput.original_summary || parsedOutput.summary || '',\n    suggested_sources: suggestedSources,\n    plagiarism_score: parsedOutput.plagiarism_score || 0,\n    flagged_sections: parsedOutput.flagged_sections || [],\n    research_suggestions: parsedOutput.research_suggestions || '',\n    citation_recommendations: parsedOutput.citation_recommendations || '',\n    confidence_score: 0.85\n  }\n};"
-      },
-      "id": "prepare-analysis-data",
-      "name": "Prepare Analysis Data",
+      "id": "f93d930c-3858-4488-bc1e-13352f23f724",
+      "name": "Format Vector for pgvector",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1050, 300]
+      "position": [672, 0]
     },
     {
       "parameters": {
-        "operation": "insert",
-        "schema": {
-          "__rl": true,
-          "value": "public",
-          "mode": "list"
-        },
-        "table": {
-          "__rl": true,
-          "value": "analysis_results",
-          "mode": "list"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "assignment_id": "={{ $json.assignment_id }}",
-            "original_summary": "={{ $json.original_summary }}",
-            "suggested_sources": "={{ JSON.stringify($json.suggested_sources) }}",
-            "plagiarism_score": "={{ $json.plagiarism_score }}",
-            "flagged_sections": "={{ JSON.stringify($json.flagged_sections) }}",
-            "research_suggestions": "={{ $json.research_suggestions }}",
-            "citation_recommendations": "={{ $json.citation_recommendations }}",
-            "confidence_score": "={{ $json.confidence_score }}"
-          }
-        },
-        "options": {}
+        "operation": "executeQuery",
+        "query": "SELECT id, title, authors, publication_year, abstract, source_type, url, 1-(embedding <=> $1::vector) AS similarity FROM academic_sources WHERE embedding IS NOT NULL ORDER BY embedding <=> $1::vector LIMIT 5;",
+        "options": {
+          "queryReplacement": "={{ $json.vector }}"
+        }
       },
-      "id": "save-to-database",
-      "name": "Save to Database",
+      "id": "260742e0-ef3c-47cb-b3cf-976cadc2c911",
+      "name": "Postgres - Vector Search",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.4,
-      "position": [1250, 300],
+      "typeVersion": 2.6,
+      "position": [896, 0],
       "credentials": {
         "postgres": {
-          "id": "postgres-db-credentials",
-          "name": "Postgres"
+          "id": "7Hl33fezNbKZ8xx8",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"model\":\"gpt-4o-mini\",\"response_format\":{\"type\":\"json_object\"},\"messages\":[{\"role\":\"system\",\"content\":\"You are an academic analysis assistant. Analyze the assignment text and similar academic sources. Return ONLY valid JSON with these exact keys: original_summary (string), topic (string), academic_level (string), plagiarism_score (float 0-100), flagged_sections (array of objects with 'text' and 'reason'), research_suggestions (string), citation_recommendations (string).\"},{\"role\":\"user\",\"content\":\"Assignment Text:\\n\" + $json.assignmentText + \"\\n\\nSimilar Academic Sources (from vector search):\\n\" + JSON.stringify($('Postgres - Vector Search').all().map(i => ({title: i.json.title, authors: i.json.authors, abstract: i.json.abstract, similarity: i.json.similarity}))) + \"\\n\\nProvide analysis in strict JSON format.\"}]}) }}",
+        "options": {}
+      },
+      "id": "8df3af04-87d3-40a2-bdab-694c7a72e6d2",
+      "name": "OpenAI - AI Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1120, 0],
+      "credentials": {
+        "openAiApi": {
+          "id": "tOL2GKY7XjM6g7Df",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get AI response from OpenAI - AI Analysis node\nconst aiResponse = JSON.parse($input.item.json.choices[0].message.content);\n\n// Get vector search results from Postgres - Vector Search node\nconst vectorResults = $('Postgres - Vector Search').all().map(i => i.json);\n\n// Get normalized data from Normalize Input node\nconst normalizedData = $('Normalize Input').first().json;\n\n// Map vector results to suggested sources\nconst suggestedSources = vectorResults.map(r => ({\n  id: r.id || null,\n  title: r.title || 'Unknown Source',\n  authors: r.authors || '',\n  publication_year: r.publication_year || null,\n  abstract: r.abstract || '',\n  source_type: r.source_type || '',\n  url: r.url || '',\n  similarity: r.similarity || 0\n}));\n\n// Return merged data matching database schema\nreturn [{\n  json: {\n    assignment_id: normalizedData.assignment_id,\n    original_summary: aiResponse.original_summary || '',\n    suggested_sources: suggestedSources,\n    plagiarism_score: aiResponse.plagiarism_score || 0,\n    flagged_sections: aiResponse.flagged_sections || [],\n    research_suggestions: aiResponse.research_suggestions || '',\n    citation_recommendations: aiResponse.citation_recommendations || '',\n    confidence_score: 0.85\n  }\n}];"
+      },
+      "id": "f722f0a5-12c2-43b1-864a-b3334cd5f65a",
+      "name": "Prepare Output Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1344, 0]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO analysis_results (assignment_id, original_summary, suggested_sources, plagiarism_score, flagged_sections, research_suggestions, citation_recommendations, confidence_score) VALUES ($1, $2, $3::jsonb, $4, $5::jsonb, $6, $7, $8) RETURNING *;",
+        "options": {
+          "queryReplacement": "={{ $json.assignment_id }},={{ $json.original_summary }},={{ JSON.stringify($json.suggested_sources) }},={{ $json.plagiarism_score }},={{ JSON.stringify($json.flagged_sections) }},={{ $json.research_suggestions }},={{ $json.citation_recommendations }},={{ $json.confidence_score }}"
+        }
+      },
+      "id": "8a8ebdc3-9c8d-41f8-b951-5306798157d1",
+      "name": "Postgres - Insert Results",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [1568, 0],
+      "credentials": {
+        "postgres": {
+          "id": "7Hl33fezNbKZ8xx8",
+          "name": "Postgres account"
         }
       }
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}",
+        "responseBody": "={{ {\"success\": true, \"assignment_id\": $json.assignment_id, \"plagiarism_score\": $json.plagiarism_score, \"message\": \"Analysis complete\"} }}",
         "options": {}
       },
-      "id": "respond-webhook",
-      "name": "Respond to Webhook",
+      "id": "48f25ee8-c0c0-4dfb-98c7-777cb7a3f8e4",
+      "name": "Respond to Backend",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [1450, 300]
+      "typeVersion": 1.5,
+      "position": [1792, 0]
     }
   ],
   "connections": {
-    "Webhook Trigger": {
+    "Webhook - Plagiarism Check": {
       "main": [
         [
           {
-            "node": "Extract Text from File",
+            "node": "Normalize Input",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Extract Text from File": {
+    "Normalize Input": {
       "main": [
         [
           {
-            "node": "Workflow Configuration",
+            "node": "OpenAI - Generate Embeddings",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Workflow Configuration": {
+    "OpenAI - Generate Embeddings": {
       "main": [
         [
           {
-            "node": "Plagiarism Detection Agent",
+            "node": "Format Vector for pgvector",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Plagiarism Detection Agent": {
+    "Format Vector for pgvector": {
       "main": [
         [
           {
-            "node": "Prepare Analysis Data",
+            "node": "Postgres - Vector Search",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "OpenAI Chat Model": {
+    "Postgres - Vector Search": {
       "main": [
         [
           {
-            "node": "Plagiarism Detection Agent",
-            "type": "model",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Vector Store - Retrieve Sources": {
-      "main": [
-        [
-          {
-            "node": "Prepare Analysis Data",
+            "node": "OpenAI - AI Analysis",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "OpenAI Embeddings": {
+    "OpenAI - AI Analysis": {
       "main": [
         [
           {
-            "node": "Vector Store - Retrieve Sources",
-            "type": "embedding",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Analysis Data": {
-      "main": [
-        [
-          {
-            "node": "Save to Database",
+            "node": "Prepare Output Data",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Save to Database": {
+    "Prepare Output Data": {
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Postgres - Insert Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Insert Results": {
+      "main": [
+        [
+          {
+            "node": "Respond to Backend",
             "type": "main",
             "index": 0
           }
@@ -301,13 +277,10 @@
     }
   },
   "pinData": {},
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "staticData": null,
-  "tags": [],
-  "triggerCount": 1,
-  "updatedAt": "2024-12-22T00:00:00.000Z",
-  "versionId": "1"
+  "meta": {
+    "templateId": "academic-assignment-analysis",
+    "templateCredsSetupCompleted": false,
+    "instanceId": "1d1616cb804828050fd8e34d79885756d2ffdb14c86ddf1f4b3a240f8f73bf92"
+  }
 }
 

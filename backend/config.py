@@ -27,7 +27,12 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     
     # n8n
-    N8N_WEBHOOK_URL: str = "http://n8n:5678/webhook/plagiarism-check"
+    N8N_WEBHOOK_URL: str = "https://nati1221.app.n8n.cloud/webhook/plagiarism-check"
+    # Called after student reviews results and confirms sending to instructor
+    N8N_TEACHER_WEBHOOK_URL: str = "https://nati1221.app.n8n.cloud/webhook/teacher-notify"
+    
+    # Notifications
+    TEACHER_EMAIL: str = "instructor@example.com"
     
     # Application
     DEBUG: bool = True
