@@ -1,145 +1,118 @@
-# Academic Assignment Helper & Plagiarism Detector (RAG-Powered)
+# Academic Assignment Helper & Plagiarism Detector
 
-A comprehensive backend + n8n automation system for academic assignment analysis, plagiarism detection, and research source suggestions using RAG (Retrieval-Augmented Generation).
+Backend system that analyzes student assignments using RAG (vector search) and AI to detect plagiarism and suggest academic sources. Built with FastAPI, PostgreSQL + pgvector, and n8n automation.
 
-## 🚀 Features
+## What It Does
 
-- **JWT-based Authentication**: Secure student registration and login
-- **File Upload & Processing**: Support for PDF and DOCX files
-- **RAG-based Source Suggestions**: Vector similarity search for relevant academic sources
-- **AI-powered Plagiarism Detection**: Advanced analysis using OpenAI models
-- **Structured Analysis Storage**: PostgreSQL database with pgvector extension
-- **n8n Workflow Automation**: Complete automation pipeline
-- **Required Notifications (Student → Teacher)**: Student receives results first; teacher is notified only after student confirms
-- **Docker Compose Setup**: Easy deployment with all services orchestrated
+Students upload assignments (PDF/DOCX), the system extracts text, searches a vector database of academic papers for similar content, runs AI analysis to detect plagiarism, and stores results. All protected with JWT authentication.
 
-## 📋 Prerequisites
+## Setup
 
-- Docker Desktop installed and running
-- WSL 2 configured (Windows users)
+**Requirements:**
+- Docker Desktop
 - OpenAI API key
 
-## 🛠️ Quick Start
+**Steps:**
 
-### 1. Clone the Repository
-
+1. Clone the repo:
 ```bash
 git clone https://github.com/Natiabay/Plagiarism-Detection-and-Assignment-Helper.git
 cd Plagiarism-Detection-and-Assignment-Helper
 ```
 
-### 2. Configure Environment
-
-Create a `.env` file in the project root:
-
+2. Create `.env` file (copy from `.env.example`):
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
-POSTGRES_PASSWORD=your_secure_password
-JWT_SECRET_KEY=your_jwt_secret_key_min_32_chars
+OPENAI_API_KEY=your_key_here
+POSTGRES_PASSWORD=your_password
+JWT_SECRET_KEY=your_secret_min_32_chars
 ```
 
-### 3. Start Services
-
+3. Start everything:
 ```bash
 docker-compose up -d
 ```
 
-### 4. Load Sample Academic Sources
+4. Load sample academic sources:
+The data is in `data/sample_academic_sources.json`. You'll need to load it into the database (script or manual import).
 
-The sample academic sources data is available in `data/sample_academic_sources.json`. 
-You can load it into the database using a custom script or directly via the API after starting the services.
+5. Setup n8n workflow:
+- Go to http://localhost:5678 (admin/admin123)
+- Import `workflows/assignment_analysis_workflow.json`
+- Configure credentials: OpenAI API, Postgres (host: `postgres`, db: `academic_helper`), SMTP if using emails
+- Activate the workflow
 
-### 5. Configure n8n Workflow
+## API Endpoints
 
-1. Open n8n: http://localhost:5678 (admin/admin123)
-2. Import workflow (student email + analysis): `workflows/assignment_analysis_workflow.json`
-3. Import workflow (teacher email after student approval): `workflows/teacher_notification_workflow.json`
-3. Configure credentials:
-   - OpenAI API (used by embeddings + analysis)
-   - Postgres (same database settings)
-   - SMTP (for student + teacher emails)
-4. Activate BOTH workflows
+**Auth:**
+- `POST /api/v1/auth/register` - Register
+- `POST /api/v1/auth/login` - Get JWT token
+- `POST /api/v1/auth/reset-password` - Reset password
+- `POST /api/v1/auth/change-password` - Change password (needs JWT)
 
-## 📚 API Endpoints
+**Assignments:**
+- `POST /api/v1/upload` - Upload assignment (needs JWT)
+- `GET /api/v1/assignments/{id}/analysis` - Get analysis results (needs JWT)
+- `GET /api/v1/sources?query=...` - Search academic sources (needs JWT)
 
-### Authentication
-- `POST /api/v1/auth/register` - Register student
-- `POST /api/v1/auth/login` - Login and get JWT token
-- `POST /api/v1/auth/token` - OAuth2-compatible token endpoint (for Swagger UI)
-- `POST /api/v1/auth/reset-password` - Reset password (for forgotten passwords)
-- `POST /api/v1/auth/change-password` - Change password (requires authentication)
+Full API docs: http://localhost:8000/docs
 
-### Assignment & Analysis
-- `POST /api/v1/upload` - Upload assignment (protected)
-- `GET /api/v1/analysis/{analysis_id}` - Get analysis results by analysis ID (protected)
-- `GET /api/v1/assignments/{assignment_id}/analysis` - Get analysis results by assignment ID (protected, recommended)
-- `POST /api/v1/assignments/{assignment_id}/send-to-teacher` - Student-confirmed step: notify teacher (protected)
-- `GET /api/v1/sources` - Search academic sources via RAG (protected)
+## Services
 
-## 🔗 Access Services
+- Backend: http://localhost:8000
+- n8n: http://localhost:5678
+- pgAdmin: http://localhost:5050 (admin@academic.local / admin)
 
-- **FastAPI Backend**: http://localhost:8000/docs
-- **n8n Workflow**: http://localhost:5678
-- **pgAdmin**: http://localhost:5050 (admin@academic.local / admin)
+## How It Works
 
-## 🏗️ Project Structure
+1. Student uploads file → Backend extracts text
+2. Backend calls n8n webhook with assignment data
+3. n8n generates embeddings → Vector search in PostgreSQL
+4. n8n runs AI analysis (GPT-4o-mini) with retrieved sources
+5. Results saved to database
+6. Student can retrieve analysis via API
+
+## Tech Stack
+
+- **Backend:** FastAPI, SQLAlchemy, JWT auth
+- **Database:** PostgreSQL with pgvector extension
+- **Automation:** n8n workflows
+- **AI:** OpenAI (embeddings + GPT-4o-mini)
+- **Deployment:** Docker Compose
+
+## Project Structure
 
 ```
-├── backend/              # FastAPI backend application
-├── workflows/            # n8n workflow exports
-├── data/                 # Sample academic sources
-├── init_db/              # Database initialization
-├── docker-compose.yml    # Service orchestration
-└── README.md            # This file
+├── backend/          # FastAPI app
+├── workflows/        # n8n workflow JSON
+├── data/             # Sample academic sources
+├── init_db/          # DB init scripts
+├── docker-compose.yml
+└── README.md
 ```
 
-## 🔐 Security
+## Notes
 
-- JWT-based authentication for all protected endpoints
-- Password hashing with bcrypt
-- Secure environment variable management
+- All endpoints except auth require JWT token
+- Passwords hashed with bcrypt
+- Vector search uses pgvector cosine similarity
+- n8n workflow handles the full analysis pipeline
 
-## 📖 Documentation
+## Troubleshooting
 
-- API Documentation: http://localhost:8000/docs (when services are running)
-- n8n Workflows:
-  - Student-first analysis workflow: `workflows/assignment_analysis_workflow.json`
-  - Teacher notification workflow: `workflows/teacher_notification_workflow.json`
-
-## ✅ Required Notification Flow (Student → Teacher)
-
-1. Student uploads assignment (`POST /api/v1/upload`) with JWT.
-2. Backend triggers n8n analysis webhook.
-3. n8n stores analysis and **emails the student** (required).
-4. After the student checks results, student calls:
-   - `POST /api/v1/assignments/{assignment_id}/send-to-teacher` (JWT required)
-5. Backend triggers the **teacher notification** webhook.
-6. n8n emails the teacher (required).
-
-## 🐛 Troubleshooting
-
-### Docker Issues
+**Services not starting?**
 ```bash
-# Check services
 docker-compose ps
-
-# View logs
-docker-compose logs postgres
-docker-compose logs n8n
+docker-compose logs backend
 ```
 
-### Database Connection
-- Ensure PostgreSQL is healthy: `docker-compose ps postgres`
-- Use `postgres` as hostname in n8n (not `localhost`)
+**Database connection issues?**
+- Make sure postgres container is healthy
+- In n8n, use `postgres` as hostname (not localhost)
 
-## 📝 License
-
-This project is for academic/educational purposes.
-
-## 👤 Author
+## Author
 
 Natnael Abayneh
 
-## 🔗 Repository
+## Repository
 
 https://github.com/Natiabay/Plagiarism-Detection-and-Assignment-Helper.git
